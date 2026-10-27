@@ -39,7 +39,7 @@ METHOD_STYLES = {
     },
 }
 DISPLAY_NAMES = {
-    SMAX: "SMax\u2013SGM, $m=1024$",
+    SMAX: "SMax\u2013SGM",
     "Full-grid SGM": "Full-grid SGM",
     "LSE--L-BFGS": "LSE\u2013L-BFGS-B",
     "Restricted LP exchange": "Restricted LP",
@@ -93,6 +93,10 @@ def make_plot(results_dir: Path, output: Path | None = None) -> Path:
     if protocol is None:
         raise KeyError("Missing budget protocol in run_config.json")
     target = float(protocol["target_relative_gap"])
+    subset_sizes = {int(row["subset_size"]) for row in rows if row["method"] == SMAX}
+    if len(subset_sizes) != 1:
+        raise ValueError("Expected one SMax subset size in history.csv.")
+    subset_size = subset_sizes.pop()
     lower_y_limit = 5e-3
     if output is None:
         output = results_dir / "anytime_relative_training_gap.png"
@@ -128,7 +132,7 @@ def make_plot(results_dir: Path, output: Path | None = None) -> Path:
         axis.plot(
             x[positive],
             median[positive],
-            label=DISPLAY_NAMES[SMAX],
+            label=f"{DISPLAY_NAMES[SMAX]}, $m={subset_size}$",
             **style,
         )
         for method in ("Full-grid SGM", "LSE--L-BFGS", "Restricted LP exchange"):
